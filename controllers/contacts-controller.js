@@ -1,30 +1,33 @@
-const express = require("express");
 const Joi = require("joi");
 
-const contactsService = require("../../models");
+const contactsService = require("../models/index");
 
-const { HttpError } = require("../../helpers");
-
-const router = express.Router();
+const { HttpError } = require("../helpers");
 
 const contactAddSchema = Joi.object({
-  name: Joi.string().required(),
-  email: Joi.string().required(),
-  phone: Joi.string().required().messages({
-    "any.required": `phone must be exist`,
-  }),
+  name: Joi.string().min(3).required(),
+  email: Joi.string()
+    .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+    .required(),
+  phone: Joi.string()
+    .min(6)
+    .required()
+    .pattern(/^\+|\d[\s\d\-\(\)]*\d$/)
+    .messages({
+      "any.required": `phone must be exist`,
+    }),
 });
 
-router.get("/", async (req, res, next) => {
+const getAllContacts = async (req, res, next) => {
   try {
     const result = await contactsService.listContacts();
     res.json(result);
   } catch (error) {
     next(error);
   }
-});
+};
 
-router.get("/:id", async (req, res, next) => {
+const getContactById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await contactsService.getContactById(id);
@@ -35,9 +38,9 @@ router.get("/:id", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-});
+};
 
-router.post("/", async (req, res, next) => {
+const addContact = async (req, res, next) => {
   try {
     const { error } = contactAddSchema.validate(req.body);
     if (error) {
@@ -48,9 +51,9 @@ router.post("/", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-});
+};
 
-router.delete("/:id", async (req, res, next) => {
+const removeContact = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await contactsService.removeContact(id);
@@ -63,9 +66,9 @@ router.delete("/:id", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-});
+};
 
-router.put("/:id", async (req, res, next) => {
+const updateContact = async (req, res, next) => {
   try {
     const { error } = contactAddSchema.validate(req.body);
     if (error) {
@@ -80,6 +83,12 @@ router.put("/:id", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-});
+};
 
-module.exports = router;
+module.exports = {
+  getAllContacts,
+  getContactById,
+  addContact,
+  removeContact,
+  updateContact,
+};
