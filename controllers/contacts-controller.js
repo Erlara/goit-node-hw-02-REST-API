@@ -34,7 +34,7 @@ const removeContact = async (req, res) => {
   const { id } = req.params;
   const result = await Contact.findByIdAndRemove(id);
   if (!result) {
-    throw HttpError(404, `Movie with ${id} not found`);
+    throw HttpError(404, `Contact with ${id} not found`);
   }
   res.json({
     message: "Delete success",
